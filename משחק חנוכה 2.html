@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק התאמת תמונות לחנוכה</title>
+    <style>
+        :root {
+            --main-blue: #1e3d59;
+            --accent-gold: #ffc13b;
+        }
+
+        body {
+            direction: rtl;
+            background: linear-gradient(135deg, var(--main-blue), #2a5484);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 50px;
+            margin-top: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .images-container, .shadows-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .draggable-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .draggable {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: contain;
+            cursor: grab;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .draggable:active {
+            transform: scale(1.1);
+        }
+
+        .draggable.correct {
+            cursor: default;
+            filter: grayscale(50%);
+            opacity: 0.8;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            font-size: 50px;
+            color: var(--accent-gold);
+            display: none;
+            transform: rotate(-15deg);
+        }
+
+        .draggable-container.correct .checkmark {
+            display: block;
+        }
+
+        .shadow {
+            width: 150px;
+            height: 150px;
+            border: 4px solid black;
+            background: black;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .shadow:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .shadow img {
+            max-width: 100%;
+            max-height: 100%;
+            opacity: 0.2;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .correct-match img {
+            opacity: 1;
+            filter: none;
+        }
+
+        .score {
+            font-size: 32px;
+            margin: 20px;
+            color: var(--accent-gold);
+        }
+
+        .win-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ffdd57, #ff9f43);
+            padding: 20px;
+            border-radius: 10px;
+            color: var(--main-blue);
+            font-size: 32px;
+            text-align: center;
+            z-index: 1000;
+            width: 60%;
+            max-width: 400px;
+            animation: popUp 0.5s ease-in-out, breathe 1.5s infinite alternate;
+        }
+
+        @keyframes breathe {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            100% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .win-message span {
+            font-size: 36px;
+            color: var(--accent-gold);
+        }
+
+        .restart-button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background-color: var(--accent-gold);
+            color: var(--main-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .restart-button:hover {
+            background-color: #e0a800;
+        }
+
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .game-container.blurred {
+            filter: blur(10px);
+            opacity: 0.5;
+        }
+
+        .item-name {
+            margin-top: 15px;
+            color: var(--accent-gold);
+            font-size: 18px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .game-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .images-container, .shadows-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .draggable-container {
+                width: 100px;
+                height: 100px;
+            }
+
+            .draggable {
+                width: 100px;
+                height: 100px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .score {
+                font-size: 20px;
+            }
+
+            .win-message {
+                width: 90%;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .images-container, .shadows-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .draggable-container {
+                width: 80px;
+                height: 80px;
+            }
+
+            .draggable {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>משחק התאמת תמונות לחנוכה</h1>
+    <div class="score">ניקוד: <span id="score">0</span>/6</div>
+    <div class="game-container">
+        <div class="images-container">
+            <!-- התמונות המגררות יוצגו כאן -->
+        </div>
+        <div class="shadows-container">
+            <!-- הצללים עבור התמונות יוצגו כאן -->
+        </div>
+    </div>
+    <div class="win-message" id="winMessage">
+        כל הכבוד! ניצחת! 🎉<br>
+        חג חנוכה שמח!
+    </div>
+    <button class="restart-button" onclick="restartGame()">התחל מחדש</button>
+    <audio id="backgroundMusic" loop>
+        <source src="./assets/music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="confetti" class="confetti"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+        const gameItems = [
+            {
+                id: 1,
+                image: './assets/images/הורדה-removebg-preview.png',
+                name: 'חנוכיה'
+            },
+            {
+                id: 2,
+                image: './assets/images/הורדה__3_-removebg-preview.png',
+                name: 'כד שמן'
+            },
+            {
+                id: 3,
+                image: './assets/images/הורדה__1_-removebg-preview.png',
+                name: 'סביבון'
+            },
+            {
+                id: 4,
+                image: './assets/images/הורדה__2_-removebg-preview.png',
+                name: 'סופגניה'
+            },
+            {
+            id: 5,
+                image: './assets/images/הורדה__4_-removebg-preview.png',
+                name: 'דמי חנוכה'
+            },
+            {
+            id: 6,
+            image: './assets/images/הורדה-removebg-preview (1).png',
+                name: 'נרות חנוכה'
+            }
+
+            
+        ];
+
+        let score = 0;
+        let matchedPairs = new Set();
+        let gameAttempts = 0;
+        const MAX_ATTEMPTS = 3; // מספר נסיונות מקסימלי
+
+        function initializeGame() {
+            const imagesContainer = document.querySelector('.images-container');
+            const shadowsContainer = document.querySelector('.shadows-container');
+
+            // יצירת אלמנטים גרירים
+            gameItems.forEach((item) => {
+                const container = document.createElement('div');
+                container.className = 'draggable-container';
+
+                const draggable = document.createElement('img');
+                draggable.src = item.image;
+                draggable.alt = item.name;
+                draggable.className = 'draggable';
+                draggable.setAttribute('draggable', true);
+                draggable.dataset.id = item.id;
+
+                draggable.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item.id);
+                });
+
+                const itemName = document.createElement('div');
+                itemName.className = 'item-name';
+                itemName.textContent = item.name;
+
+                const checkmark = document.createElement('span');
+                checkmark.className = 'checkmark';
+                checkmark.textContent = '✅';
+
+                container.appendChild(draggable);
+                container.appendChild(itemName);
+                container.appendChild(checkmark);
+                imagesContainer.appendChild(container);
+
+                // יצירת הצלליות
+                const shadow = document.createElement('div');
+                shadow.className = 'shadow';
+                shadow.dataset.id = item.id;
+
+                const placeholderImg = document.createElement('img');
+                placeholderImg.src = item.image;
+                placeholderImg.alt = item.name;
+
+                shadow.appendChild(placeholderImg);
+
+                shadow.addEventListener('dragover', (e) => e.preventDefault());
+                shadow.addEventListener('drop', handleDrop);
+                shadowsContainer.appendChild(shadow);
+            });
+            document.getElementById('backgroundMusic').play();
+            gameAttempts = 0; // איפוס מספר נסיונות
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+            const targetElement = e.target.closest('.shadow');
+            const targetId = parseInt(targetElement.dataset.id);
+
+            if (draggedId === targetId && !matchedPairs.has(draggedId)) {
+                matchedPairs.add(draggedId);
+                score++;
+                document.getElementById('score').textContent = score;
+
+                const shadowElement = targetElement;
+                shadowElement.classList.add('correct-match');
+                shadowElement.querySelector('img').style.opacity = 1;
+
+                const draggableContainer = document.querySelector(`.draggable-container[data-id="${draggedId}"]`);
+                draggableContainer.classList.add('correct');
+
+                const checkmark = draggableContainer.querySelector('.checkmark');
+                checkmark.style.display = 'block';
+
+                console.log('Current Score:', score, 'Total Items:', gameItems.length);
+
+                if (score === gameItems.length) {
+                    console.log('Win condition met!');
+                    setTimeout(() => {
+                        triggerWinAnimation();
+                    }, 500);
+                }
+            }
+        }
+
+        function triggerWinAnimation() {
+            console.log('Win animation triggered!');
+
+            // הוספת אפקט קונפטי
+            confetti({
+                particleCount: 200,
+                spread: 150,
+                origin: { y: 0.6 }
+            });
+
+            // הוספת טשטוש למשחק
+            document.querySelector('.game-container').classList.add('blurred');
+            
+            // הצגת הודעת ניצחון
+            const winMessage = document.getElementById('winMessage');
+            winMessage.style.display = 'block';
+            winMessage.style.opacity = '1';
+
+            // הוספת אפשרות להמשיך משחק
+            gameAttempts++;
+            
+            if (gameAttempts < MAX_ATTEMPTS) {
+                // הוספת כפתור המשך משחק
+                const continueButton = document.createElement('button');
+                continueButton.textContent = `המשך משחק (נסיון ${gameAttempts + 1}/${MAX_ATTEMPTS})`;
+                continueButton.classList.add('restart-button');
+                continueButton.onclick = continueGame;
+                winMessage.appendChild(continueButton);
+            }
+
+            console.log('Score:', score, 'Game Items Length:', gameItems.length);
+        }
+
+        function continueGame() {
+            // איפוס המשחק עם שמירה על מספר נסיונות
+            restartGame();
+            document.querySelector('.game-container').classList.remove('blurred');
+            document.querySelector('.win-message').querySelector('button')?.remove();
+        }
+
+        function restartGame() {
+            score = 0;
+            matchedPairs.clear();
+            document.getElementById('score').textContent = score;
+            document.querySelectorAll('.draggable-container').forEach(container => {
+                container.classList.remove('correct');
+                container.querySelector('.checkmark').style.display = 'none';
+            });
+            document.querySelectorAll('.shadow').forEach(shadow => {
+                shadow.classList.remove('correct-match');
+                shadow.querySelector('img').style.opacity = 0.2;
+            });
+            document.getElementById('winMessage').style.display = 'none';
+
+            // אם מוצו כל הנסיונות, מתחיל מחדש לגמרי
+            if (gameAttempts >= MAX_ATTEMPTS) {
+                gameAttempts = 0;
+            }
+        }
+
+        initializeGame();
+    </script>
+</body>
+</html>
