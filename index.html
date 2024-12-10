@@ -138,40 +138,69 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #ffdd57, #ff9f43);
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
             color: var(--main-blue);
             font-size: 32px;
             text-align: center;
             z-index: 1000;
             width: 60%;
             max-width: 400px;
-            animation: popUp 0.5s ease-in-out, breathe 1.5s infinite alternate;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        @keyframes breathe {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-50%, -50%) scale(1.05); }
-        }
-
-        .win-message span {
-            font-size: 36px;
-            color: var(--accent-gold);
-        }
-
-        .restart-button {
+        .win-message .restart-button {
+            position: relative;
             margin-top: 20px;
             padding: 15px 30px;
-            background-color: var(--accent-gold);
+            background: linear-gradient(45deg, #ffc13b, #ff6b6b);
             color: var(--main-blue);
             border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            border-radius: 50px;
             font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
         }
 
-        .restart-button:hover {
-            background-color: #e0a800;
+        .win-message .restart-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .win-message .restart-button:hover::before {
+            left: 100%;
+        }
+
+        .win-message .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffdd57, #ff7f50);
+        }
+
+        .win-message .restart-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* אפקט נצנוץ */
+        @keyframes sparkle {
+            0%, 100% { text-shadow: none; }
+            50% { text-shadow: 0 0 10px rgba(255,255,255,0.7); }
+        }
+
+        .win-message .restart-button span {
+            display: inline-block;
+            animation: sparkle 1.5s infinite;
         }
 
         .confetti {
@@ -249,6 +278,61 @@
                 height: 80px;
             }
         }
+
+        /* סגנון כפתור התחל מחדש - גרסה כללית */
+        .restart-button {
+            position: relative;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ffc13b, #ff6b6b);
+            color: var(--main-blue);
+            border: none;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .restart-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .restart-button:hover::before {
+            left: 100%;
+        }
+
+        .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffdd57, #ff7f50);
+        }
+
+        .restart-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* אפקט נצנוץ */
+        @keyframes sparkle {
+            0%, 100% { text-shadow: none; }
+            50% { text-shadow: 0 0 10px rgba(255,255,255,0.7); }
+        }
+
+        .restart-button span {
+            display: inline-block;
+            animation: sparkle 1.5s infinite;
+        }
     </style>
 </head>
 <body>
@@ -263,10 +347,12 @@
         </div>
     </div>
     <div class="win-message" id="winMessage">
-        כל הכבוד! ניצחת! 🎉<br>
-        חג חנוכה שמח!
+       חג חנוכה שמח! כל הכבוד! ניצחת! 🎉<br>
+      
     </div>
-    <button class="restart-button" onclick="restartGame()">התחל מחדש</button>
+    <button class="restart-button" onclick="restartGame()">
+        <span>התחל מחדש</span>
+    </button>
     <audio id="backgroundMusic" loop>
         <source src="./assets/music/background.mp3" type="audio/mpeg">
     </audio>
@@ -467,20 +553,13 @@
             document.querySelector('.game-container').classList.add('blurred');
             
             const winMessage = document.getElementById('winMessage');
+            winMessage.innerHTML = `
+                <div> כל הכבוד! ניצחת! חג חנוכה שמח 🎉</div>
+                <button class="restart-button" onclick="restartGame()">
+                    <span>התחל מחדש</span>
+                </button>
+            `;
             winMessage.style.display = 'block';
-            winMessage.style.opacity = '1';
-
-            gameAttempts++;
-            
-            if (gameAttempts < MAX_ATTEMPTS) {
-                const continueButton = document.createElement('button');
-                continueButton.textContent = `המשך משחק (נסיון ${gameAttempts + 1}/${MAX_ATTEMPTS})`;
-                continueButton.classList.add('restart-button');
-                continueButton.onclick = continueGame;
-                winMessage.appendChild(continueButton);
-            }
-
-            console.log('Score:', score, 'Game Items Length:', gameItems.length);
         }
 
         function continueGame() {
@@ -494,6 +573,7 @@
             matchedPairs.clear();
             document.getElementById('score').textContent = score;
             document.querySelectorAll('.draggable-container').forEach(container => {
+                container.style.display = 'flex';
                 container.classList.remove('correct');
                 container.querySelector('.checkmark').style.display = 'none';
             });
@@ -502,6 +582,7 @@
                 shadow.querySelector('img').style.opacity = 0.2;
             });
             document.getElementById('winMessage').style.display = 'none';
+            document.querySelector('.game-container').classList.remove('blurred');
 
             if (gameAttempts >= MAX_ATTEMPTS) {
                 gameAttempts = 0;
