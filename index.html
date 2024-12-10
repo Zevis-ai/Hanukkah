@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משחק התאמת  111תמונות לחנוכה</title>
+    <title>משחק התאמת תמונות לחנוכה</title>
     <style>
         :root {
             --main-blue: #1e3d59;
@@ -68,7 +68,7 @@
         }
 
         .draggable:active {
-            transform: scale(1.1);
+            cursor: grabbing;
         }
 
         .draggable.correct {
@@ -104,6 +104,7 @@
             overflow: hidden;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
             transition: box-shadow 0.3s ease;
+            cursor: default;
         }
 
         .shadow:hover {
@@ -328,27 +329,15 @@
                 draggable.setAttribute('draggable', true);
                 draggable.dataset.id = item.id;
 
-                draggable.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    draggable.classList.add('dragging');
-                });
+                // תמיכה במגע
+                draggable.addEventListener('touchstart', handleTouchStart);
+                draggable.addEventListener('touchmove', handleTouchMove);
+                draggable.addEventListener('touchend', handleTouchEnd);
 
-                draggable.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    draggable.classList.remove('dragging');
-                    
-                    const touch = e.changedTouches[0];
-                    const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
-                    
-                    if (elementAtPoint && elementAtPoint.closest('.shadow')) {
-                        const shadowElement = elementAtPoint.closest('.shadow');
-                        handleTouchDrop(item.id, shadowElement);
-                    }
-                });
-
-                draggable.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', item.id);
-                });
+                // תמיכה בגרירה במחשב
+                draggable.addEventListener('dragstart', handleDragStart);
+                draggable.addEventListener('dragover', handleDragOver);
+                draggable.addEventListener('drop', handleDrop);
 
                 const itemName = document.createElement('div');
                 itemName.className = 'item-name';
@@ -366,34 +355,67 @@
                 const shadow = document.createElement('div');
                 shadow.className = 'shadow';
                 shadow.dataset.id = item.id;
+                shadow.setAttribute('droppable', true);
 
                 const placeholderImg = document.createElement('img');
                 placeholderImg.src = item.image;
                 placeholderImg.alt = item.name;
 
                 shadow.appendChild(placeholderImg);
-
-                shadow.addEventListener('touchover', (e) => e.preventDefault());
-                shadow.addEventListener('touchend', (e) => e.preventDefault());
+                shadow.addEventListener('dragover', handleDragOver);
+                shadow.addEventListener('drop', handleDrop);
                 shadowsContainer.appendChild(shadow);
             });
-
-            document.addEventListener('touchmove', (e) => {
-                const draggingElement = document.querySelector('.dragging');
-                if (draggingElement) {
-                    const touch = e.touches[0];
-                    draggingElement.style.position = 'fixed';
-                    draggingElement.style.left = `${touch.clientX}px`;
-                    draggingElement.style.top = `${touch.clientY}px`;
-                    draggingElement.style.zIndex = '1000';
-                }
-            });
-
-            document.getElementById('backgroundMusic').play();
-            gameAttempts = 0;
         }
 
-        function handleTouchDrop(draggedId, targetElement) {
+        function handleTouchStart(e) {
+            e.preventDefault();
+            this.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const draggingElement = document.querySelector('.dragging');
+            if (draggingElement) {
+                draggingElement.style.position = 'fixed';
+                draggingElement.style.left = `${touch.clientX}px`;
+                draggingElement.style.top = `${touch.clientY}px`;
+                draggingElement.style.zIndex = '1000';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            const draggingElement = document.querySelector('.dragging');
+            if (draggingElement) {
+                draggingElement.classList.remove('dragging');
+                const touch = e.changedTouches[0];
+                const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (elementAtPoint && elementAtPoint.closest('.shadow')) {
+                    const shadowElement = elementAtPoint.closest('.shadow');
+                    const draggedId = parseInt(draggingElement.dataset.id);
+                    handleMatch(draggedId, shadowElement);
+                }
+            }
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+            handleMatch(draggedId, this);
+        }
+
+        function handleMatch(draggedId, targetElement) {
             const targetId = parseInt(targetElement.dataset.id);
 
             if (draggedId === targetId && !matchedPairs.has(draggedId)) {
@@ -471,12 +493,14 @@
             }
         }
 
+        // מניעת זום במכשירי מגע
         document.addEventListener('touchmove', (e) => {
             if (e.touches.length > 1) {
                 e.preventDefault();
             }
         }, { passive: false });
 
+        // אתחול המשחק
         initializeGame();
     </script>
 </body>
