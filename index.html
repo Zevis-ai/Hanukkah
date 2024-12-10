@@ -63,6 +63,8 @@
             cursor: grab;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease;
+            touch-action: none;
+            user-select: none;
         }
 
         .draggable:active {
@@ -207,13 +209,13 @@
             }
 
             .draggable-container {
-                width: 100px;
-                height: 100px;
+                width: 120px;
+                height: 120px;
             }
 
             .draggable {
-                width: 100px;
-                height: 100px;
+                width: 120px;
+                height: 120px;
             }
 
             h1 {
@@ -315,7 +317,6 @@
             const imagesContainer = document.querySelector('.images-container');
             const shadowsContainer = document.querySelector('.shadows-container');
 
-            // יצירת אלמנטים גרירים
             gameItems.forEach((item) => {
                 const container = document.createElement('div');
                 container.className = 'draggable-container';
@@ -326,6 +327,24 @@
                 draggable.className = 'draggable';
                 draggable.setAttribute('draggable', true);
                 draggable.dataset.id = item.id;
+
+                draggable.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    draggable.classList.add('dragging');
+                });
+
+                draggable.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    draggable.classList.remove('dragging');
+                    
+                    const touch = e.changedTouches[0];
+                    const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                    
+                    if (elementAtPoint && elementAtPoint.closest('.shadow')) {
+                        const shadowElement = elementAtPoint.closest('.shadow');
+                        handleTouchDrop(item.id, shadowElement);
+                    }
+                });
 
                 draggable.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', item.id);
@@ -344,7 +363,6 @@
                 container.appendChild(checkmark);
                 imagesContainer.appendChild(container);
 
-                // יצירת הצלליות
                 const shadow = document.createElement('div');
                 shadow.className = 'shadow';
                 shadow.dataset.id = item.id;
@@ -355,18 +373,27 @@
 
                 shadow.appendChild(placeholderImg);
 
-                shadow.addEventListener('dragover', (e) => e.preventDefault());
-                shadow.addEventListener('drop', handleDrop);
+                shadow.addEventListener('touchover', (e) => e.preventDefault());
+                shadow.addEventListener('touchend', (e) => e.preventDefault());
                 shadowsContainer.appendChild(shadow);
             });
+
+            document.addEventListener('touchmove', (e) => {
+                const draggingElement = document.querySelector('.dragging');
+                if (draggingElement) {
+                    const touch = e.touches[0];
+                    draggingElement.style.position = 'fixed';
+                    draggingElement.style.left = `${touch.clientX}px`;
+                    draggingElement.style.top = `${touch.clientY}px`;
+                    draggingElement.style.zIndex = '1000';
+                }
+            });
+
             document.getElementById('backgroundMusic').play();
-            gameAttempts = 0; // איפוס מספר נסיונות
+            gameAttempts = 0;
         }
 
-        function handleDrop(e) {
-            e.preventDefault();
-            const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
-            const targetElement = e.target.closest('.shadow');
+        function handleTouchDrop(draggedId, targetElement) {
             const targetId = parseInt(targetElement.dataset.id);
 
             if (draggedId === targetId && !matchedPairs.has(draggedId)) {
@@ -374,9 +401,8 @@
                 score++;
                 document.getElementById('score').textContent = score;
 
-                const shadowElement = targetElement;
-                shadowElement.classList.add('correct-match');
-                shadowElement.querySelector('img').style.opacity = 1;
+                targetElement.classList.add('correct-match');
+                targetElement.querySelector('img').style.opacity = 1;
 
                 const draggableContainer = document.querySelector(`.draggable-container[data-id="${draggedId}"]`);
                 draggableContainer.classList.add('correct');
@@ -384,10 +410,7 @@
                 const checkmark = draggableContainer.querySelector('.checkmark');
                 checkmark.style.display = 'block';
 
-                console.log('Current Score:', score, 'Total Items:', gameItems.length);
-
                 if (score === gameItems.length) {
-                    console.log('Win condition met!');
                     setTimeout(() => {
                         triggerWinAnimation();
                     }, 500);
@@ -398,26 +421,21 @@
         function triggerWinAnimation() {
             console.log('Win animation triggered!');
 
-            // הוספת אפקט קונפטי
             confetti({
                 particleCount: 200,
                 spread: 150,
                 origin: { y: 0.6 }
             });
 
-            // הוספת טשטוש למשחק
             document.querySelector('.game-container').classList.add('blurred');
             
-            // הצגת הודעת ניצחון
             const winMessage = document.getElementById('winMessage');
             winMessage.style.display = 'block';
             winMessage.style.opacity = '1';
 
-            // הוספת אפשרות להמשיך משחק
             gameAttempts++;
             
             if (gameAttempts < MAX_ATTEMPTS) {
-                // הוספת כפתור המשך משחק
                 const continueButton = document.createElement('button');
                 continueButton.textContent = `המשך משחק (נסיון ${gameAttempts + 1}/${MAX_ATTEMPTS})`;
                 continueButton.classList.add('restart-button');
@@ -429,7 +447,6 @@
         }
 
         function continueGame() {
-            // איפוס המשחק עם שמירה על מספר נסיונות
             restartGame();
             document.querySelector('.game-container').classList.remove('blurred');
             document.querySelector('.win-message').querySelector('button')?.remove();
@@ -449,11 +466,16 @@
             });
             document.getElementById('winMessage').style.display = 'none';
 
-            // אם מוצו כל הנסיונות, מתחיל מחדש לגמרי
             if (gameAttempts >= MAX_ATTEMPTS) {
                 gameAttempts = 0;
             }
         }
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         initializeGame();
     </script>
