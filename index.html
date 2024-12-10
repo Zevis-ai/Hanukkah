@@ -25,8 +25,26 @@
         }
 
         h1 {
+            position: relative;
             font-size: 48px;
-            margin-bottom: 20px;
+            color: var(--accent-gold);
+            text-align: center;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffc13b, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            padding: 10px 20px;
+            border-radius: 15px;
+            transform: skew(-5deg);
+            display: inline-block;
+            margin-bottom: 30px;
+            border: 3px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        h1::before {
+            display: none;
         }
 
         .game-container {
