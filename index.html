@@ -53,6 +53,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: opacity 0.3s ease;
         }
 
         .draggable {
@@ -390,13 +391,31 @@
             const draggingElement = document.querySelector('.dragging');
             if (draggingElement) {
                 draggingElement.classList.remove('dragging');
+                draggingElement.style.position = 'static';
+                
                 const touch = e.changedTouches[0];
                 const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
                 
                 if (elementAtPoint && elementAtPoint.closest('.shadow')) {
                     const shadowElement = elementAtPoint.closest('.shadow');
                     const draggedId = parseInt(draggingElement.dataset.id);
-                    handleMatch(draggedId, shadowElement);
+                    
+                    if (draggedId === parseInt(shadowElement.dataset.id) && !matchedPairs.has(draggedId)) {
+                        draggingElement.closest('.draggable-container').style.display = 'none';
+                        
+                        shadowElement.classList.add('correct-match');
+                        shadowElement.querySelector('img').style.opacity = 1;
+                        
+                        matchedPairs.add(draggedId);
+                        score++;
+                        document.getElementById('score').textContent = score;
+
+                        if (score === gameItems.length) {
+                            setTimeout(() => {
+                                triggerWinAnimation();
+                            }, 500);
+                        }
+                    }
                 }
             }
         }
@@ -412,30 +431,26 @@
         function handleDrop(e) {
             e.preventDefault();
             const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
-            handleMatch(draggedId, this);
-        }
+            const targetElement = e.target.closest('.shadow');
 
-        function handleMatch(draggedId, targetElement) {
-            const targetId = parseInt(targetElement.dataset.id);
+            if (targetElement) {
+                const draggableElement = document.querySelector(`.draggable[data-id="${draggedId}"]`);
+                
+                if (draggedId === parseInt(targetElement.dataset.id) && !matchedPairs.has(draggedId)) {
+                    draggableElement.closest('.draggable-container').style.display = 'none';
+                    
+                    targetElement.classList.add('correct-match');
+                    targetElement.querySelector('img').style.opacity = 1;
+                    
+                    matchedPairs.add(draggedId);
+                    score++;
+                    document.getElementById('score').textContent = score;
 
-            if (draggedId === targetId && !matchedPairs.has(draggedId)) {
-                matchedPairs.add(draggedId);
-                score++;
-                document.getElementById('score').textContent = score;
-
-                targetElement.classList.add('correct-match');
-                targetElement.querySelector('img').style.opacity = 1;
-
-                const draggableContainer = document.querySelector(`.draggable-container[data-id="${draggedId}"]`);
-                draggableContainer.classList.add('correct');
-
-                const checkmark = draggableContainer.querySelector('.checkmark');
-                checkmark.style.display = 'block';
-
-                if (score === gameItems.length) {
-                    setTimeout(() => {
-                        triggerWinAnimation();
-                    }, 500);
+                    if (score === gameItems.length) {
+                        setTimeout(() => {
+                            triggerWinAnimation();
+                        }, 500);
+                    }
                 }
             }
         }
