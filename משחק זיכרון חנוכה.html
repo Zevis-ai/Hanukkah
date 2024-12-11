@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק זיכרון חנוכה</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            background: linear-gradient(135deg, #1e3d59, #2a5484);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: white;
+            font-size: 24px;
+        }
+
+        h1 {
+            font-size: 48px;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            max-width: 900px;
+            margin-top: 20px;
+        }
+
+        .card {
+            width: 200px;
+            height: 200px;
+            background-color: #ffc13b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: transform 0.3s;
+            position: relative;
+            font-size: 36px;
+        }
+
+        .card img {
+            max-width: 100%;
+            max-height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card.flipped img {
+            opacity: 1;
+        }
+
+        .card.matched {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .score {
+            font-size: 36px;
+            margin: 30px;
+            color: #ffc13b;
+        }
+
+        .win-message {
+            display: none;
+            text-align: center;
+            background: #ffc13b;
+            color: #1e3d59;
+            padding: 30px;
+            border-radius: 10px;
+            font-size: 36px;
+        }
+
+        .restart-button {
+            background-color: #1e3d59;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 28px;
+        }
+        .memory-game-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            background: linear-gradient(45deg, #ff6b6b, #ffc13b);
+            color: var(--main-blue);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .memory-game-link::before {
+            content: '🃏';
+            font-size: 24px;
+        }
+
+        .memory-game-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9f43, #ffd700);
+        }
+
+        .memory-game-link:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .memory-game-link {
+                top: 10px;
+                left: 10px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>משחק זיכרון חנוכה</h1>
+    <a href="index.html" class="memory-game-link">למשחק התאמת תמונות</a>
+    <div class="score">ניקוד: <span id="score">0</span></div>
+    <div class="game-container" id="gameContainer"></div>
+    <div class="win-message" id="winMessage">
+        כל הכבוד! ניצחת במשחק!
+        <br>
+        <button class="restart-button" onclick="restartGame()">התחל מחדש</button>
+    </div>
+
+    <script>
+        const hanukkahImages = [
+        'הורדה__4_-removebg-preview.png', 
+            'הורדה-removebg-preview.png', 
+            'הורדה__2_-removebg-preview.png', 
+            'הורדה__1_-removebg-preview.png', 
+            'הורדה-removebg-preview (1).png', 
+            'הורדה__3_-removebg-preview.png'
+        ];
+
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let score = 0;
+
+        function createBoard() {
+            const gameContainer = document.getElementById('gameContainer');
+            const duplicatedImages = [...hanukkahImages, ...hanukkahImages];
+            const shuffledImages = duplicatedImages.sort(() => Math.random() - 0.5);
+
+            shuffledImages.forEach(image => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.setAttribute('data-image', image);
+
+                const img = document.createElement('img');
+                img.src = `./assets/images/${image}`;
+                img.alt = 'כרטיס חנוכה';
+
+                card.appendChild(img);
+                card.addEventListener('click', () => flipCard(card));
+                gameContainer.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
+                card.classList.add('flipped');
+                flippedCards.push(card);
+
+                if (flippedCards.length === 2) {
+                    setTimeout(checkMatch, 1000);
+                }
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const image1 = card1.getAttribute('data-image');
+            const image2 = card2.getAttribute('data-image');
+
+            if (image1 === image2) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                updateScore(10);
+
+                if (matchedPairs === hanukkahImages.length) {
+                    setTimeout(showWinMessage, 500);
+                }
+            } else {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                updateScore(-5);
+            }
+
+            flippedCards = [];
+        }
+
+        function updateScore(points) {
+            score += points;
+            document.getElementById('score').textContent = score;
+        }
+
+        function showWinMessage() {
+            document.getElementById('winMessage').style.display = 'block';
+        }
+
+        function restartGame() {
+            document.getElementById('gameContainer').innerHTML = '';
+            document.getElementById('winMessage').style.display = 'none';
+            matchedPairs = 0;
+            score = 0;
+            document.getElementById('score').textContent = '0';
+            createBoard();
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>

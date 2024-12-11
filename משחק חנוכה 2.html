@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="theme-color" content="#ffc13b">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק התאמת תמונות לחנוכה</title>
+    <style>
+        :root {
+            --main-blue: #1e3d59;
+            --accent-gold: #ffc13b;
+        }
+
+        body {
+            direction: rtl;
+            background: linear-gradient(135deg, var(--main-blue), #2a5484);
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: white;
+            font-size: 18px;
+        }
+
+        h1 {
+            position: relative;
+            font-size: 48px;
+            color: var(--accent-gold);
+            text-align: center;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffc13b, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            padding: 10px 20px;
+            border-radius: 15px;
+            transform: skew(-5deg);
+            display: inline-block;
+            margin-bottom: 30px;
+            border: 3px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        h1::before {
+            display: none;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 50px;
+            margin-top: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .images-container, .shadows-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .draggable-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .draggable {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: contain;
+            cursor: grab;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+        }
+
+        .draggable.correct {
+            cursor: default;
+            filter: grayscale(50%);
+            opacity: 0.8;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            font-size: 50px;
+            color: var(--accent-gold);
+            display: none;
+            transform: rotate(-15deg);
+        }
+
+        .draggable-container.correct .checkmark {
+            display: block;
+        }
+
+        .shadow {
+            width: 150px;
+            height: 150px;
+            border: 4px solid black;
+            background: black;
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            transition: box-shadow 0.3s ease;
+            cursor: default;
+        }
+
+        .shadow:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .shadow img {
+            max-width: 100%;
+            max-height: 100%;
+            opacity: 0.2;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .correct-match img {
+            opacity: 1;
+            filter: none;
+        }
+
+        .score {
+            font-size: 32px;
+            margin: 20px;
+            color: var(--accent-gold);
+        }
+
+        .win-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ffdd57, #ff9f43);
+            padding: 30px;
+            border-radius: 15px;
+            color: var(--main-blue);
+            font-size: 32px;
+            text-align: center;
+            z-index: 1000;
+            width: 60%;
+            max-width: 400px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .win-message .restart-button {
+            position: relative;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ffc13b, #ff6b6b);
+            color: var(--main-blue);
+            border: none;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .win-message .restart-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .win-message .restart-button:hover::before {
+            left: 100%;
+        }
+
+        .win-message .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffdd57, #ff7f50);
+        }
+
+        .win-message .restart-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* אפקט נצנוץ */
+        @keyframes sparkle {
+            0%, 100% { text-shadow: none; }
+            50% { text-shadow: 0 0 10px rgba(255,255,255,0.7); }
+        }
+
+        .win-message .restart-button span {
+            display: inline-block;
+            animation: sparkle 1.5s infinite;
+        }
+
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .game-container.blurred {
+            filter: blur(10px);
+            opacity: 0.5;
+        }
+
+        .item-name {
+            margin-top: 15px;
+            color: var(--accent-gold);
+            font-size: 18px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .game-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .images-container, .shadows-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .draggable-container {
+                width: 120px;
+                height: 120px;
+            }
+
+            .draggable {
+                width: 120px;
+                height: 120px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .score {
+                font-size: 20px;
+            }
+
+            .win-message {
+                width: 90%;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .images-container, .shadows-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .draggable-container {
+                width: 80px;
+                height: 80px;
+            }
+
+            .draggable {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        /* סגנון כפתור התחל מחדש - גרסה כללית */
+        .restart-button {
+            position: relative;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ffc13b, #ff6b6b);
+            color: var(--main-blue);
+            border: none;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .restart-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .restart-button:hover::before {
+            left: 100%;
+        }
+
+        .restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffdd57, #ff7f50);
+        }
+
+        .restart-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        /* אפקט נצנוץ */
+        @keyframes sparkle {
+            0%, 100% { text-shadow: none; }
+            50% { text-shadow: 0 0 10px rgba(255,255,255,0.7); }
+        }
+
+        .restart-button span {
+            display: inline-block;
+            animation: sparkle 1.5s infinite;
+        }
+
+        .memory-game-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            background: linear-gradient(45deg, #ff6b6b, #ffc13b);
+            color: var(--main-blue);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .memory-game-link::before {
+            content: '🃏';
+            font-size: 24px;
+        }
+
+        .memory-game-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9f43, #ffd700);
+        }
+
+        .memory-game-link:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .memory-game-link {
+                top: 10px;
+                left: 10px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>משחק התאמת תמונות לחנוכה</h1>
+    <a href="משחק זיכרון חנוכה.html" class="memory-game-link">
+        <span>למשחק הזיכרון</span>
+    </a>
+    <div class="score">ניקוד: <span id="score">0</span>/6</div>
+    <div class="game-container">
+        <div class="images-container">
+            <!-- התמונות המגררות יוצגו כאן -->
+        </div>
+        <div class="shadows-container">
+            <!-- הצללים עבור התמונות יוצגו כאן -->
+        </div>
+    </div>
+    <div class="win-message" id="winMessage">
+       חג חנוכה שמח! כל הכבוד! ניצחת! 🎉<br>
+      
+    </div>
+    <button class="restart-button" onclick="restartGame()">
+        <span>התחל מחדש</span>
+    </button>
+    <audio id="backgroundMusic" loop>
+        <source src="./assets/music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="confetti" class="confetti"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+        const gameItems = [
+            {
+                id: 1,
+                image: './assets/images/הורדה-removebg-preview.png',
+                name: 'חנוכיה'
+            },
+            {
+                id: 2,
+                image: './assets/images/הורדה__3_-removebg-preview.png',
+                name: 'כד שמן'
+            },
+            {
+                id: 3,
+                image: './assets/images/הורדה__1_-removebg-preview.png',
+                name: 'סביבון'
+            },
+            {
+                id: 4,
+                image: './assets/images/הורדה__2_-removebg-preview.png',
+                name: 'סופגניה'
+            },
+            {
+            id: 5,
+                image: './assets/images/הורדה__4_-removebg-preview.png',
+                name: 'דמי חנוכה'
+            },
+            {
+            id: 6,
+            image: './assets/images/הורדה-removebg-preview (1).png',
+                name: 'נרות חנוכה'
+            }
+
+            
+        ];
+
+        let score = 0;
+        let matchedPairs = new Set();
+        let gameAttempts = 0;
+        const MAX_ATTEMPTS = 3; // מספר נסיונות מקסימלי
+
+        function initializeGame() {
+            const imagesContainer = document.querySelector('.images-container');
+            const shadowsContainer = document.querySelector('.shadows-container');
+
+            gameItems.forEach((item) => {
+                const container = document.createElement('div');
+                container.className = 'draggable-container';
+
+                const draggable = document.createElement('img');
+                draggable.src = item.image;
+                draggable.alt = item.name;
+                draggable.className = 'draggable';
+                draggable.setAttribute('draggable', true);
+                draggable.dataset.id = item.id;
+
+                // תמיכה במגע
+                draggable.addEventListener('touchstart', handleTouchStart);
+                draggable.addEventListener('touchmove', handleTouchMove);
+                draggable.addEventListener('touchend', handleTouchEnd);
+
+                // תמיכה בגרירה במחשב
+                draggable.addEventListener('dragstart', handleDragStart);
+                draggable.addEventListener('dragover', handleDragOver);
+                draggable.addEventListener('drop', handleDrop);
+
+                const itemName = document.createElement('div');
+                itemName.className = 'item-name';
+                itemName.textContent = item.name;
+
+                const checkmark = document.createElement('span');
+                checkmark.className = 'checkmark';
+                checkmark.textContent = '✅';
+
+                container.appendChild(draggable);
+                container.appendChild(itemName);
+                container.appendChild(checkmark);
+                imagesContainer.appendChild(container);
+
+                const shadow = document.createElement('div');
+                shadow.className = 'shadow';
+                shadow.dataset.id = item.id;
+                shadow.setAttribute('droppable', true);
+
+                const placeholderImg = document.createElement('img');
+                placeholderImg.src = item.image;
+                placeholderImg.alt = item.name;
+
+                shadow.appendChild(placeholderImg);
+                shadow.addEventListener('dragover', handleDragOver);
+                shadow.addEventListener('drop', handleDrop);
+                shadowsContainer.appendChild(shadow);
+            });
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            this.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const draggingElement = document.querySelector('.dragging');
+            if (draggingElement) {
+                draggingElement.style.position = 'fixed';
+                draggingElement.style.left = `${touch.clientX}px`;
+                draggingElement.style.top = `${touch.clientY}px`;
+                draggingElement.style.zIndex = '1000';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            const draggingElement = document.querySelector('.dragging');
+            if (draggingElement) {
+                draggingElement.classList.remove('dragging');
+                draggingElement.style.position = 'static';
+                
+                const touch = e.changedTouches[0];
+                const elementAtPoint = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (elementAtPoint && elementAtPoint.closest('.shadow')) {
+                    const shadowElement = elementAtPoint.closest('.shadow');
+                    const draggedId = parseInt(draggingElement.dataset.id);
+                    
+                    if (draggedId === parseInt(shadowElement.dataset.id) && !matchedPairs.has(draggedId)) {
+                        draggingElement.closest('.draggable-container').style.display = 'none';
+                        
+                        shadowElement.classList.add('correct-match');
+                        shadowElement.querySelector('img').style.opacity = 1;
+                        
+                        matchedPairs.add(draggedId);
+                        score++;
+                        document.getElementById('score').textContent = score;
+
+                        if (score === gameItems.length) {
+                            setTimeout(() => {
+                                triggerWinAnimation();
+                            }, 500);
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const draggedId = parseInt(e.dataTransfer.getData('text/plain'));
+            const targetElement = e.target.closest('.shadow');
+
+            if (targetElement) {
+                const draggableElement = document.querySelector(`.draggable[data-id="${draggedId}"]`);
+                
+                if (draggedId === parseInt(targetElement.dataset.id) && !matchedPairs.has(draggedId)) {
+                    draggableElement.closest('.draggable-container').style.display = 'none';
+                    
+                    targetElement.classList.add('correct-match');
+                    targetElement.querySelector('img').style.opacity = 1;
+                    
+                    matchedPairs.add(draggedId);
+                    score++;
+                    document.getElementById('score').textContent = score;
+
+                    if (score === gameItems.length) {
+                        setTimeout(() => {
+                            triggerWinAnimation();
+                        }, 500);
+                    }
+                }
+            }
+        }
+
+        function triggerWinAnimation() {
+            console.log('Win animation triggered!');
+
+            confetti({
+                particleCount: 200,
+                spread: 150,
+                origin: { y: 0.6 }
+            });
+
+            document.querySelector('.game-container').classList.add('blurred');
+            
+            const winMessage = document.getElementById('winMessage');
+            winMessage.innerHTML = `
+                <div> כל הכבוד! ניצחת! חג חנוכה שמח 🎉</div>
+                <button class="restart-button" onclick="restartGame()">
+                    <span>התחל מחדש</span>
+                </button>
+            `;
+            winMessage.style.display = 'block';
+        }
+
+        function continueGame() {
+            restartGame();
+            document.querySelector('.game-container').classList.remove('blurred');
+            document.querySelector('.win-message').querySelector('button')?.remove();
+        }
+
+        function restartGame() {
+            score = 0;
+            matchedPairs.clear();
+            document.getElementById('score').textContent = score;
+            document.querySelectorAll('.draggable-container').forEach(container => {
+                container.style.display = 'flex';
+                container.classList.remove('correct');
+                container.querySelector('.checkmark').style.display = 'none';
+            });
+            document.querySelectorAll('.shadow').forEach(shadow => {
+                shadow.classList.remove('correct-match');
+                shadow.querySelector('img').style.opacity = 0.2;
+            });
+            document.getElementById('winMessage').style.display = 'none';
+            document.querySelector('.game-container').classList.remove('blurred');
+
+            if (gameAttempts >= MAX_ATTEMPTS) {
+                gameAttempts = 0;
+            }
+        }
+
+        // מניעת זום במכשירי מגע
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // אתחול המשחק
+        initializeGame();
+    </script>
+</body>
+</html>
