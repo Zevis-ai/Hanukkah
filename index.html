@@ -352,10 +352,55 @@
             display: inline-block;
             animation: sparkle 1.5s infinite;
         }
+
+        .memory-game-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            background: linear-gradient(45deg, #ff6b6b, #ffc13b);
+            color: var(--main-blue);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .memory-game-link::before {
+            content: '🃏';
+            font-size: 24px;
+        }
+
+        .memory-game-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9f43, #ffd700);
+        }
+
+        .memory-game-link:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .memory-game-link {
+                top: 10px;
+                left: 10px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>משחק התאמת תמונות לחנוכה</h1>
+    <a href="משחק זיכרון חנוכה.html" class="memory-game-link">
+        <span>למשחק הזיכרון</span>
+    </a>
     <div class="score">ניקוד: <span id="score">0</span>/6</div>
     <div class="game-container">
         <div class="images-container">
