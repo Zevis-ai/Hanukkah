@@ -354,21 +354,22 @@
         }
 
         .memory-game-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
+            display: block;
+            margin: 10px auto;
+            width: fit-content;
             text-decoration: none;
             background: linear-gradient(45deg, #ff6b6b, #ffc13b);
             color: var(--main-blue);
-            padding: 10px 20px;
-            border-radius: 50px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 14px;
             font-weight: bold;
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-            z-index: 10;
             display: flex;
             align-items: center;
             gap: 10px;
+            position: static;
         }
 
         .memory-game-link::before {
@@ -388,19 +389,18 @@
 
         @media (max-width: 768px) {
             .memory-game-link {
-                top: 10px;
-                left: 10px;
-                padding: 8px 15px;
-                font-size: 14px;
+                padding: 6px 12px;
+                font-size: 12px;
+                margin: 15px auto;
             }
         }
     </style>
 </head>
 <body>
     <h1>משחק התאמת תמונות לחנוכה</h1>
-    <a href="משחק זיכרון חנוכה.html" class="memory-game-link">
-        <span>למשחק הזיכרון</span>
-    </a>
+
+   
+
     <div class="score">ניקוד: <span id="score">0</span>/6</div>
     <div class="game-container">
         <div class="images-container">
@@ -417,6 +417,11 @@
     <button class="restart-button" onclick="restartGame()">
         <span>התחל מחדש</span>
     </button>
+
+    <button class="restart-button" onclick="window.location.href='משחק זיכרון חנוכה.html'">
+        <span>למשחק הזיכרון</span>
+    </button>
+
     <audio id="backgroundMusic" loop>
         <source src="./assets/music/background.mp3" type="audio/mpeg">
     </audio>
