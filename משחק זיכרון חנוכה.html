@@ -120,11 +120,71 @@
         }
 
         @media (max-width: 768px) {
-            .memory-game-link {
-                top: 10px;
-                left: 10px;
+            body {
+                padding: 10px;
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .game-container {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .card {
+                width: 100px;
+                height: 100px;
+                font-size: 24px;
+            }
+
+            .score {
+                font-size: 24px;
+                margin: 15px;
+            }
+
+            .win-message {
+                font-size: 24px;
+                padding: 20px;
+            }
+
+            .restart-button {
+                font-size: 20px;
+                padding: 10px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 5px;
+            }
+
+            .card {
+                width: 80px;
+                height: 80px;
+                font-size: 18px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .score {
+                font-size: 18px;
+                margin: 10px;
+            }
+
+            .win-message {
+                font-size: 18px;
+                padding: 15px;
+            }
+
+            .restart-button {
+                font-size: 16px;
                 padding: 8px 15px;
-                font-size: 14px;
             }
         }
     </style>
