@@ -121,6 +121,40 @@
             transform: scale(0.95);
         }
 
+        .candles-game-link {
+            position: fixed;
+            bottom: 84px;
+            right: 20px;
+            left: auto;
+            text-decoration: none;
+            background: linear-gradient(45deg, #ff6b6b, #ffc13b);
+            color: #1e3d59;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .candles-game-link::before {
+            content: '🕯️';
+            font-size: 24px;
+        }
+
+        .candles-game-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff9f43, #ffd700);
+        }
+
+        .candles-game-link:active {
+            transform: scale(0.95);
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -194,6 +228,7 @@
 <body>
     <h1>משחק זיכרון חנוכה</h1>
     <a href="index.html" class="memory-game-link">למשחק התאמת תמונות</a>
+    <a href="משחק הדלקת נרות.html" class="candles-game-link">למשחק הדלקת נרות</a>
     <div class="score">ניקוד: <span id="score">0</span></div>
     <div class="game-container" id="gameContainer"></div>
     <div class="win-message" id="winMessage">
